@@ -9,7 +9,7 @@ $hostname   = shift or die "Ingrese hostname";
 $community  = shift or die "Ingrese comunidad SNMP";
 $pseudowire = shift or die "Ingrese Pseudowire";
 
-$debug = 0;
+my $debug = 0;
 my %estado;
 
 $oid = ".1.3.6.1.4.1.9.10.106.1.2.1";
@@ -25,12 +25,14 @@ foreach $line (@reply)
 {
     print $line if $debug;
 
-    if ($line=~/$oid.(\d*).$pseudowire\s*=\s*\S*:\s*(.*$)/)
+    if ($line=~/$oid.(\d*).$pseudowire\s*=\s*\S*:\s*(.*)$/)
     {
         $estado{$1} = $2;
         $is_real++;
     }
 }
+
+print Dumper \%estado if $debug;
 
 if ($is_real == 0)
 {
@@ -52,20 +54,20 @@ if (($cpwVcAdminStatus eq '1') and ($cpwVcOperStatus eq '1'))
     print $RESULTADO;
     exit (0);
 }
-if (($cpwVcAdminStatus eq '1') and ($cpwVcOperStatus ne '1'))
+elsif (($cpwVcAdminStatus eq '1') and ($cpwVcOperStatus eq '2'))
 {
     $RESULTADO = sprintf("Critical - Link %s Admin Up; Operational Down\n", $cpwVcname);
-    print $RESULTADO
+    print $RESULTADO;
     exit (2);
 }
 else
 {
-    $RESULTADO = sprintf("CRITICAL - Link %s down\n", $cpwVcname);
-    print $RESULTADO
+    $RESULTADO = sprintf("Critical - Admin Up; Operational Down\n", $cpwVcname);
+    print $RESULTADO;
     exit (2);
 }
 
-print Dumper \%estado if $debug;
+
 
 printf ("UNKNOWN\n");
 exit(3);
