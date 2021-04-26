@@ -1,0 +1,30 @@
+
+#my_network=10.172.2.0/24
+
+yum clean all
+yum -y install nrpe
+yum -y install nagios-plugins-all
+systemctl enable --now nrpe
+firewall-cmd --add-service=nrpe --permanent
+firewall-cmd --reload
+
+touch /etc/nrpe.d/monitoreo.cfg
+
+cat > /etc/nrpe.d/monitoreo.cfg << ENDOFFILE
+command[check_disk_root]=/usr/lib64/nagios/plugins/check_disk -w 20% -c 10% -p /
+command[check_process_named]=/usr/lib64/nagios/plugins/check_procs  -c 1: -C named
+command[check_process_ntp]=/usr/lib64/nagios/plugins/check_procs  -c 1: -C ntpd
+command[check_process_dhcp]=/usr/lib64/nagios/plugins/check_procs  -c 1: -C dhcpd
+command[check_process_postfix]=/usr/lib64/nagios/plugins/check_procs  -c 1: -C master
+command[check_process_radius]=/usr/lib64/nagios/plugins/check_procs  -c 1: -C radiusd
+command[check_process_tacplus]=/usr/lib64/nagios/plugins/check_procs  -c 1: -C tac_plus
+command[check_process_mysqld]=/usr/lib64/nagios/plugins/check_procs  -c 1: -C mysqld
+command[check_process_syslogd]=/usr/lib64/nagios/plugins/check_procs  -c 1: -C syslog-ng
+command[check_process_corosync]=/usr/lib64/nagios/plugins/check_procs  -c 1: -C corosync
+command[check_process_pacemakerd]=/usr/lib64/nagios/plugins/check_procs  -c 1: -C pacemakerd
+command[check_process_centreon]=/usr/lib64/nagios/plugins/check_procs  -c 1: -C centengine
+ENDOFFILE
+
+sed -i 's/^allowed_hosts=.*/allowed_hosts=127.0.0.1,::1,10.172.2.0\/24,10.170.99.0\/24/g' /etc/nagios/nrpe.cfg
+
+systemctl restart nrpe
